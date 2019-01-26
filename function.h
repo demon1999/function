@@ -129,7 +129,7 @@ private:
             if (!is_small) {
                 callable = other.callable;
             } else {
-                reinterpret_cast<ICallable*>(&other.data)->moveTo(data);
+                reinterpret_cast<const ICallable*>(&other.data)->moveTo(data);
             }
             other.is_small = false;
             other.callable = nullptr;
@@ -143,7 +143,7 @@ private:
                 else
                     callable = nullptr;
             } else {
-                reinterpret_cast<ICallable*>(&other.data)->cloneTo(data);
+                reinterpret_cast<const ICallable*>(&other.data)->cloneTo(data);
             }
         }
 
