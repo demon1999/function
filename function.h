@@ -19,20 +19,20 @@ template <typename ReturnValue, typename... Args>
 class function<ReturnValue(Args...)> {
 public:
 
-    function() = default;
+    function() noexcept = default;
 
     ~function() = default;
 
-    function(std::nullptr_t): storage_() {}
+    function(std::nullptr_t) noexcept : storage_() {}
 
     function(const function& other) : storage_(other.storage_){}
 
-    function(function&& other): storage_(std::move(other.storage_)){};
+    function(function&& other) noexcept : storage_(std::move(other.storage_)) {};
 
     template <class T>
     function(T t) : storage_(t){}
 
-    void swap(function &other) {
+    void swap(function &other) noexcept {
         storage_.swap(other.storage_);
     }
 
@@ -42,13 +42,13 @@ public:
         return *this;
     }
 
-    function& operator=(function&& other) {
+    function& operator=(function&& other) noexcept {
         function f(std::move(other));
         this->swap(f);
         return *this;
     }
 
-    explicit operator bool() const {
+    explicit operator bool() const noexcept {
         return !(storage_.is_small && storage_.callable == nullptr);
     }
 
@@ -65,7 +65,7 @@ private:
         virtual ReturnValue Invoke(Args...) const = 0;
         virtual ICallable* clone() = 0;
         virtual void cloneTo(unsigned char *) const = 0;
-        virtual void moveTo(unsigned char *) const = 0;
+        virtual void moveTo(unsigned char *) const noexcept = 0;
     };
 
     template <typename T>
@@ -75,7 +75,7 @@ private:
                 : t_(t) {
         }
 
-        CallableT(const T&& t)
+        CallableT(const T&& t) noexcept
                 : t_(std::move(t)) {
         }
 
@@ -89,7 +89,7 @@ private:
             new (data) CallableT(t_);
         }
 
-        void moveTo(unsigned char *data) const override {
+        void moveTo(unsigned char *data) const noexcept override {
             new (data) CallableT(std::move(t_));
         }
 
@@ -104,13 +104,13 @@ private:
 
 
     struct storage {
-        static const int small_size = sizeof(ICallable*);
+        static const int small_size = sizeof(CallableT<void(*)()>);
         union {
             unsigned char data[small_size];
             ICallable* callable;
         };
         bool is_small;
-        storage() {
+        storage() noexcept {
             is_small = false;
             callable = nullptr;
         }
@@ -124,7 +124,7 @@ private:
             }
         }
 
-        storage(storage&& other) {
+        storage(storage&& other) noexcept {
             is_small = other.is_small;
             if (!is_small) {
                 callable = other.callable;
@@ -150,7 +150,8 @@ private:
 
         template <class T>
         storage(const T& t) {
-            if (sizeof(CallableT < T > ) <= small_size) {
+            if (sizeof(CallableT < T > ) <= small_size && std::is_copy_constructible<T>::value &&
+                std::is_nothrow_move_constructible<T>::value) {
                 is_small = true;
                 new(data) CallableT <T>(t);
             } else {
@@ -175,7 +176,7 @@ private:
             }
         }
 
-        void swap(storage& other) {
+        void swap(storage& other) noexcept {
             if (!is_small && !other.is_small) {
                 std::swap(other.callable, callable);
             }
