@@ -25,9 +25,7 @@ public:
 
     function(std::nullptr_t): storage_() {}
 
-    function(const function& other) {
-        storage_(other.storage_);
-    }
+    function(const function& other) : storage_(other.storage_){}
 
     function(function&& other): storage_(std::move(other.storage_)){};
 
@@ -131,7 +129,7 @@ private:
             if (!is_small) {
                 callable = other.callable;
             } else {
-                reinterpret_cast<ICallable*>(&other.data)->move_to(data);
+                reinterpret_cast<ICallable*>(&other.data)->moveTo(data);
             }
             other.is_small = false;
             other.callable = nullptr;
