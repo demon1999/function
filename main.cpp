@@ -12,8 +12,8 @@ void hulk() {
 int main() {
 
     struct test {
-        test();
-        //test(const test&) = delete;
+        test() = default;
+        test(const test&) = default;
         test(test&&) = delete;
         void operator()() const { std::cout<< "test" << std::endl; }
     } t;
