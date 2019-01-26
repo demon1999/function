@@ -30,7 +30,7 @@ public:
     function(function&& other) noexcept : storage_(std::move(other.storage_)) {};
 
     template <class T>
-    function(T t) : storage_(t){}
+    function(T t) : storage_(std::move(t)){}
 
     void swap(function &other) noexcept {
         storage_.swap(other.storage_);
@@ -43,6 +43,7 @@ public:
     }
 
     function& operator=(function&& other) noexcept {
+        std::cout << " kukarek\n";
         function f(std::move(other));
         this->swap(f);
         return *this;
@@ -81,7 +82,7 @@ private:
                 : t_(t) {
         }
 
-        CallableT(const T&& t) noexcept
+        CallableT(T&& t) noexcept
                 : t_(std::move(t)) {
         }
 
@@ -153,16 +154,15 @@ private:
             }
         }
 
-
         template <class T>
-        storage(const T& t) {
+        storage(T&& t) {
             if (sizeof(CallableT < T > ) <= small_size && std::is_copy_constructible<T>::value &&
                 std::is_nothrow_move_constructible<T>::value) {
                 is_small = true;
-                new(data) CallableT <T>(t);
+                new(data) CallableT <T>(std::move(t));
             } else {
                 is_small = false;
-                callable = new CallableT <T>(t);
+                callable = new CallableT <T>(std::move(t));
             }
         }
 

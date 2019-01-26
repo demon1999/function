@@ -1,5 +1,6 @@
 #include <iostream>
 #include "function.h"
+#include <functional>
 
 void func() {
     std::cout << "func" << std::endl;
@@ -10,43 +11,35 @@ void hulk() {
 }
 
 
+struct test2 {
+    test2() = default;
+    test2(test2&&) noexcept {
+        std::cout << "move constructor\n";
+    }
+    test2(const test2&) {
+        std::cout << "const constructor\n";
+    }
+    test2& operator=(const test2&) {
+        std::cout << "copy =\n";
+        return *this;
+    }
+    test2& operator=(test2&&) {
+        std::cout << "move =\n";
+        return *this;
+    }
+    int operator()() {
+        return 2;
+    }
+};
+
 struct test {
+    test() = default;
+
     void operator()() const { std::cout<< "test" << std::endl; }
 };
 
 int main() {
-
-//    struct test {
-//        test() = default;
-//        test(const test&) = default;
-//        test(test&&) = delete;
-//        void operator()() const { std::cout<< "test" << std::endl; }
-//    } t;
-
-
-    function<void()> f(func);
-    f = test();
-    //f = func;
-    f();
-    function<void()> g(hulk);
-    g.swap(f);
-    g();
-    f = g;
-    f();
-    f = std::move(g);
-    f();
-    //g();
-    f = hulk;
-    f();
-
-    f = []() {
-        std::cout << "heroin\n";
-    };
-    f();
-
-    function<void(int)> gg = [](int k) {
-        std::cout << k << "\n";
-    };
-    gg(100);
+    std::function<int()> g2 = test2();
+    function<int()> gg = test2();
     return 0;
 }
