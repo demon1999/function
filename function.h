@@ -68,7 +68,6 @@ private:
     class ICallable {
     public:
         virtual ~ICallable() = default;
-        virtual ReturnValue Invoke(Args...) const = 0;
         virtual ReturnValue Invoke(Args...) = 0;
         virtual ICallable* clone() = 0;
         virtual void cloneTo(unsigned char *) const = 0;
@@ -101,10 +100,6 @@ private:
         }
 
         ReturnValue Invoke(Args... args) override {
-            return t_(args...);
-        }
-
-        ReturnValue Invoke(Args... args) const override {
             return t_(args...);
         }
 
@@ -171,7 +166,7 @@ private:
             }
         }
 
-        const ICallable* operator->() const {
+        ICallable* operator->() const {
             if (!is_small) {
                 return callable;
             } else {
@@ -213,7 +208,7 @@ private:
             std::swap(is_small, other.is_small);
         }
     } storage_;
-    //std::unique_ptr<ICallable> callable_;
+
 };
 
 

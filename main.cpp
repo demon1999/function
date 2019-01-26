@@ -11,7 +11,7 @@ void hulk() {
 
 
 struct test {
-    void operator()() { std::cout<< "test" << std::endl; }
+    void operator()() const { std::cout<< "test" << std::endl; }
 };
 
 int main() {
