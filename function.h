@@ -72,7 +72,7 @@ private:
         virtual ReturnValue Invoke(Args...) = 0;
         virtual ICallable* clone() = 0;
         virtual void cloneTo(unsigned char *) const = 0;
-        virtual void moveTo(unsigned char *) const noexcept = 0;
+        virtual void moveTo(unsigned char *) noexcept = 0;
     };
 
     template <typename T>
@@ -96,7 +96,7 @@ private:
             new (data) CallableT(t_);
         }
 
-        void moveTo(unsigned char *data) const noexcept override {
+        void moveTo(unsigned char *data) noexcept override {
             new (data) CallableT(std::move(t_));
         }
 
@@ -136,7 +136,7 @@ private:
             if (!is_small) {
                 callable = other.callable;
             } else {
-                reinterpret_cast<const ICallable*>(&other.data)->moveTo(data);
+                reinterpret_cast<ICallable*>(&other.data)->moveTo(data);
             }
             other.is_small = false;
             other.callable = nullptr;
