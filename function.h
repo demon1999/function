@@ -170,7 +170,7 @@ private:
             if (!is_small) {
                 return callable;
             } else {
-                return reinterpret_cast<const ICallable*>(&data);
+                return const_cast<ICallable*>(reinterpret_cast<const ICallable*>(&data));
             }
         }
 

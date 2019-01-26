@@ -1,6 +1,6 @@
 #include <iostream>
 #include "function.h"
-#include <functional>
+//#include <functional>
 
 void func() {
     std::cout << "func" << std::endl;
@@ -39,7 +39,8 @@ struct test {
 };
 
 int main() {
-    std::function<int()> g2 = test2();
-    function<int()> gg = test2();
+    //std::function<int()> g2 = test2();
+    const function<int()> gg = test2();
+    gg();
     return 0;
 }
