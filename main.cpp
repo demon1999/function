@@ -9,18 +9,23 @@ void hulk() {
     std:: cout << "hulk" << std::endl;
 }
 
+
+struct test {
+    void operator()() { std::cout<< "test" << std::endl; }
+};
+
 int main() {
 
-    struct test {
-        test() = default;
-        test(const test&) = default;
-        test(test&&) = delete;
-        void operator()() const { std::cout<< "test" << std::endl; }
-    } t;
+//    struct test {
+//        test() = default;
+//        test(const test&) = default;
+//        test(test&&) = delete;
+//        void operator()() const { std::cout<< "test" << std::endl; }
+//    } t;
 
 
     function<void()> f(func);
-    f = t;
+    f = test();
     //f = func;
     f();
     function<void()> g(hulk);

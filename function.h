@@ -52,6 +52,12 @@ public:
         return !(storage_.is_small && storage_.callable == nullptr);
     }
 
+    ReturnValue operator()(Args... args) {
+        if (!storage_.is_small && storage_.callable == nullptr)
+            throw std::bad_function_call();
+        return storage_->Invoke(std::forward<Args>(args)...);
+    }
+
     ReturnValue operator()(Args... args) const {
         if (!storage_.is_small && storage_.callable == nullptr)
             throw std::bad_function_call();
@@ -63,6 +69,7 @@ private:
     public:
         virtual ~ICallable() = default;
         virtual ReturnValue Invoke(Args...) const = 0;
+        virtual ReturnValue Invoke(Args...) = 0;
         virtual ICallable* clone() = 0;
         virtual void cloneTo(unsigned char *) const = 0;
         virtual void moveTo(unsigned char *) const noexcept = 0;
@@ -91,6 +98,10 @@ private:
 
         void moveTo(unsigned char *data) const noexcept override {
             new (data) CallableT(std::move(t_));
+        }
+
+        ReturnValue Invoke(Args... args) override {
+            return t_(args...);
         }
 
         ReturnValue Invoke(Args... args) const override {
