@@ -113,7 +113,7 @@ private:
     struct storage {
         static const int small_size = sizeof(CallableT<void(*)()>);
         union {
-            unsigned char data[small_size];
+            mutable unsigned char data[small_size];
             ICallable* callable;
         };
         bool is_small;
@@ -170,7 +170,7 @@ private:
             if (!is_small) {
                 return callable;
             } else {
-                return const_cast<ICallable*>(reinterpret_cast<const ICallable*>(&data));
+                return reinterpret_cast<ICallable*>(&data);
             }
         }
 

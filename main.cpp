@@ -42,5 +42,8 @@ int main() {
     //std::function<int()> g2 = test2();
     const function<int()> gg = test2();
     gg();
+
+    function<void()> g = test();
+    g();
     return 0;
 }
