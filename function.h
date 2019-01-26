@@ -165,7 +165,7 @@ private:
             if (!is_small) {
                 return callable;
             } else {
-                return reinterpret_cast<ICallable*>(&data);
+                return reinterpret_cast<const ICallable*>(&data);
             }
         }
 
@@ -184,21 +184,21 @@ private:
 
             if (is_small && !other.is_small) {
                 ICallable* buffer = other.callable;
-                reinterpret_cast<ICallable*>(&data)->move_to(other.data);
+                reinterpret_cast<ICallable*>(&data)->moveTo(other.data);
                 callable = buffer;
             }
 
             if (!is_small && other.is_small) {
                 ICallable* buffer = callable;
-                reinterpret_cast<ICallable*>(&other.data)->move_to(data);
+                reinterpret_cast<ICallable*>(&other.data)->moveTo(data);
                 other.callable = buffer;
             }
 
             if (is_small && other.is_small) {
                 unsigned char c[small_size];
-                reinterpret_cast<ICallable*>(&data)->move_to(c);
-                reinterpret_cast<ICallable*>(&other.data)->move_to(data);
-                reinterpret_cast<ICallable*>(&c)->move_to(other.data);
+                reinterpret_cast<ICallable*>(&data)->moveTo(c);
+                reinterpret_cast<ICallable*>(&other.data)->moveTo(data);
+                reinterpret_cast<ICallable*>(&c)->moveTo(other.data);
             }
             std::swap(is_small, other.is_small);
         }
