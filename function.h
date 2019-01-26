@@ -64,7 +64,7 @@ private:
     class ICallable {
     public:
         virtual ~ICallable() = default;
-        virtual ReturnValue Invoke(Args...) = 0;
+        virtual ReturnValue Invoke(Args...) const = 0;
         virtual ICallable* clone() = 0;
         virtual void cloneTo(unsigned char *) const = 0;
         virtual void moveTo(unsigned char *) const = 0;
@@ -83,19 +83,19 @@ private:
 
         ~CallableT() override = default;
 
-        CallableT* clone() {
+        CallableT* clone() override {
             return new CallableT(t_);
         }
 
-        void cloneTo(unsigned char *data) const {
+        void cloneTo(unsigned char *data) const override{
             new (data) CallableT(t_);
         }
 
-        void moveTo(unsigned char *data) const {
+        void moveTo(unsigned char *data) const override {
             new (data) CallableT(std::move(t_));
         }
 
-        ReturnValue Invoke(Args... args) override {
+        ReturnValue Invoke(Args... args) const override {
             return t_(args...);
         }
 
