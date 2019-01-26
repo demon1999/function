@@ -10,7 +10,17 @@ void hulk() {
 }
 
 int main() {
+
+    struct test {
+        test();
+        //test(const test&) = delete;
+        test(test&&) = delete;
+        void operator()() const { std::cout<< "test" << std::endl; }
+    } t;
+
+
     function<void()> f(func);
+    f = t;
     //f = func;
     f();
     function<void()> g(hulk);
