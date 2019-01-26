@@ -19,27 +19,23 @@ template <typename ReturnValue, typename... Args>
 class function<ReturnValue(Args...)> {
 public:
 
-    function() {
-        callable_ = nullptr;
-    }
+    function() = default;
 
-    function(std::nullptr_t) {
-        callable_ = nullptr;
-    }
+    ~function() = default;
+
+    function(std::nullptr_t): storage_() {}
 
     function(const function& other) {
-       callable_ = std::unique_ptr<ICallable>(other.callable_->clone());
+        storage_(other.storage_);
     }
 
-    function(function&& other): callable_(std::move(other.callable_)){};
+    function(function&& other): storage_(std::move(other.storage_)){};
 
     template <class T>
-    function(T t) {
-        callable_ = std::make_unique<CallableT<T>>(t);
-    }
+    function(T t) : storage_(t){}
 
     void swap(function &other) {
-        callable_.swap(other.callable_);
+        storage_.swap(other.storage_);
     }
 
     function& operator=(const function& other) {
@@ -55,12 +51,13 @@ public:
     }
 
     explicit operator bool() const {
-        return callable_ != nullptr;
+        return !(storage_.is_small && storage_.callable == nullptr);
     }
+
     ReturnValue operator()(Args... args) const {
-        if (callable_ == nullptr)
+        if (storage_ == nullptr)
             throw std::bad_function_call();
-        return callable_->Invoke(std::forward<Args>(args)...);
+        return storage_->Invoke(std::forward<Args>(args)...);
     }
 
 private:
@@ -69,6 +66,8 @@ private:
         virtual ~ICallable() = default;
         virtual ReturnValue Invoke(Args...) = 0;
         virtual ICallable* clone() = 0;
+        virtual void cloneTo(unsigned char *) const = 0;
+        virtual void moveTo(unsigned char *) const = 0;
     };
 
     template <typename T>
@@ -78,10 +77,22 @@ private:
                 : t_(t) {
         }
 
+        CallableT(const T&& t)
+                : t_(std::move(t)) {
+        }
+
         ~CallableT() override = default;
 
-        virtual CallableT* clone() {
+        CallableT* clone() {
             return new CallableT(t_);
+        }
+
+        void cloneTo(unsigned char *data) const {
+            new (data) CallableT(t_);
+        }
+
+        void moveTo(unsigned char *data) const {
+            new (data) CallableT(std::move(t_));
         }
 
         ReturnValue Invoke(Args... args) override {
@@ -92,7 +103,107 @@ private:
         T t_;
     };
 
-    std::unique_ptr<ICallable> callable_;
+
+
+    struct storage {
+        const int small_size = 2;
+        union {
+            unsigned char data[sizeof(ICallable*)];
+            ICallable* callable;
+        };
+        bool is_small;
+        storage() {
+            is_small = false;
+            callable = nullptr;
+        }
+
+        ~storage() {
+            if (is_small) {
+                reinterpret_cast<ICallable*> (&data)->~ICallable();
+            } else {
+                if (callable != nullptr)
+                    delete callable;
+            }
+        }
+
+        storage(storage&& other) {
+            is_small = other.is_small;
+            if (!is_small) {
+                callable = other.callable;
+            } else {
+                reinterpret_cast<ICallable*>(&other.data)->move_to(data);
+            }
+            other.is_small = false;
+            other.callable = nullptr;
+        }
+
+        storage(const storage& other) {
+            is_small = other.is_small;
+            if (!is_small) {
+                if (other.callable != nullptr)
+                    callable = other.callable->clone();
+                else
+                    callable = nullptr;
+            } else {
+                reinterpret_cast<ICallable*>(&other.data)->cloneTo(data);
+            }
+        }
+
+
+        template <class T>
+        storage(const T& t) {
+            if (size_of(CallableT < T > ) < small_size) {
+                is_small = true;
+                new(data) CallableT <T>(t);
+            } else {
+                is_small = false;
+                callable = new CallableT <T>(t);
+            }
+        }
+
+        const ICallable* operator->() const {
+            if (!is_small) {
+                return callable;
+            } else {
+                return reinterpret_cast<ICallable*>(&data);
+            }
+        }
+
+        ICallable* operator->() {
+            if (!is_small) {
+                return callable;
+            } else {
+                return reinterpret_cast<ICallable*>(&data);
+            }
+        }
+
+        void swap(storage& other) {
+            if (!is_small && !other.is_small) {
+                std::swap(other.callable, callable);
+            }
+
+            if (is_small && !other.is_small) {
+                ICallable* buffer = other.callable;
+                reinterpret_cast<ICallable*>(&data)->move_to(other.data);
+                callable = buffer;
+            }
+
+            if (!is_small && other.is_small) {
+                ICallable* buffer = callable;
+                reinterpret_cast<ICallable*>(&other.data)->move_to(data);
+                other.callable = buffer;
+            }
+
+            if (is_small && other.is_small) {
+                unsigned char c[sizeof(ICallable*)];
+                reinterpret_cast<ICallable*>(&data)->move_to(c);
+                reinterpret_cast<ICallable*>(&other.data)->move_to(data);
+                reinterpret_cast<ICallable*>(&c)->move_to(other.data);
+            }
+            std::swap(is_small, other.is_small);
+        }
+    } storage_;
+    //std::unique_ptr<ICallable> callable_;
 };
 
 

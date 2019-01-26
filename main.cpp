@@ -23,5 +23,15 @@ int main() {
     //g();
     f = hulk;
     f();
+
+    f = []() {
+        std::cout << "heroin\n";
+    };
+    f();
+
+    function<void(int)> gg = [](int k) {
+        std::cout << k << "\n";
+    };
+    gg(100);
     return 0;
 }
