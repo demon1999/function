@@ -55,7 +55,7 @@ public:
     }
 
     ReturnValue operator()(Args... args) const {
-        if (storage_ == nullptr)
+        if (!storage_.is_small && storage_.callable == nullptr)
             throw std::bad_function_call();
         return storage_->Invoke(std::forward<Args>(args)...);
     }
@@ -106,9 +106,9 @@ private:
 
 
     struct storage {
-        const int small_size = 2;
+        static const int small_size = sizeof(ICallable*);
         union {
-            unsigned char data[sizeof(ICallable*)];
+            unsigned char data[small_size];
             ICallable* callable;
         };
         bool is_small;
@@ -152,7 +152,7 @@ private:
 
         template <class T>
         storage(const T& t) {
-            if (size_of(CallableT < T > ) < small_size) {
+            if (sizeof(CallableT < T > ) < small_size) {
                 is_small = true;
                 new(data) CallableT <T>(t);
             } else {
@@ -195,7 +195,7 @@ private:
             }
 
             if (is_small && other.is_small) {
-                unsigned char c[sizeof(ICallable*)];
+                unsigned char c[small_size];
                 reinterpret_cast<ICallable*>(&data)->move_to(c);
                 reinterpret_cast<ICallable*>(&other.data)->move_to(data);
                 reinterpret_cast<ICallable*>(&c)->move_to(other.data);
