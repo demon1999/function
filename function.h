@@ -152,7 +152,7 @@ private:
 
         template <class T>
         storage(const T& t) {
-            if (sizeof(CallableT < T > ) < small_size) {
+            if (sizeof(CallableT < T > ) <= small_size) {
                 is_small = true;
                 new(data) CallableT <T>(t);
             } else {
